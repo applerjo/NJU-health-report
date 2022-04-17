@@ -39,4 +39,3 @@ jobs:
           body:  file://email.txt
           to: ${{ secrets.receive_email }}
           from: GitHub Actions
-          content_type: text/html
