@@ -3,7 +3,7 @@ name: Health Report Action
 on:
   workflow_dispatch:  
   schedule:
-    - cron: '0 11 * * *'
+    - cron: '0 2 * * *'
 
 jobs:
   build:
@@ -31,7 +31,7 @@ jobs:
       - name: Send mail
         uses: dawidd6/action-send-mail@master
         with:
-          server_address: smtp.qq.com
+          server_address: smtp.163.com
           server_port: 465
           username: ${{ secrets.mail_username }}
           password: ${{ secrets.mail_password }}
