@@ -57,11 +57,15 @@ def get_zjhs_time(method='YESTERDAY', username=None, last_time=None):
 
 
 if __name__ == "__main__":
-    time.sleep(random.random()*1000)  # 随机等待0-16.6667min
     load_dotenv(verbose=True)
     logging.basicConfig(
         level=logging.INFO, format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
     log = logging.getLogger()
+
+    # 随机等待0-16.6667min
+    sleep_time = random.random()*1000
+    log.info('正在等待...(等待时间：%ds)' % sleep_time)
+    time.sleep(sleep_time)
 
     username = os.getenv('NJU_USERNAME')
     password = os.getenv('NJU_PASSWORD')
