@@ -21,9 +21,9 @@
 3. 进入 `Settings` 选项，点击 `Secret`，并选择 `New Repository Secret`。依次添加以下变量：
    - `username`: 学号
    - `password`: 南京大学统一认证的密码
-   - `location_info_from`: 地址信息来源: `CONFIG` 或 `LAST`, 分别表示配置中或上次打卡信息
+   - `location_info_from`: 地址信息来源: `CONFIG` 或 `LAST`, 分别表示配置中或上次打卡信息, 默认 `LAST`
    - `location`: 你希望打卡的地理位置。比如南京大学仙林校区可以填 `中国江苏省南京市栖霞区九乡河东路`
-   - `covid_test_method`: 核酸检测日期方式: `YESTERDAY`, `LAST`, `NORMALIZATION`, `NORMALIZATION&LAST`, 分别表示昨天、上次打卡信息、常态化、常态化和上次打卡中较新的一个
+   - `covid_test_method`: 核酸检测日期方式: `YESTERDAY`, `LAST`, `NORMALIZATION`, `NORMALIZATION&LAST`, 分别表示昨天、上次打卡信息、常态化、常态化和上次打卡中较新的一个，默认 `YESTERDAY`
    - `mail_username`: 发送邮件的邮箱账号
    - `mail_password`: 发送邮件的邮箱密码（smtp）
    - `receive_email`: 接收邮件的账号

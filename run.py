@@ -49,6 +49,11 @@ def get_zjhs_time(method='YESTERDAY', username=None, last_time=None):
         else:
             date = get_normalization_date(username).strftime("%Y-%m-%d %-H")
         return date
+    else:
+        log.error('核酸检测日期方式方式不准确，请检查是否正确地设置了 SECRET 项（GitHub Action）。')
+        notify('核酸检测日期方式方式不准确，请检查是否正确地设置了 SECRET 项（GitHub Action）。')
+        os._exit(1)
+
 
 
 if __name__ == "__main__":
@@ -100,8 +105,12 @@ if __name__ == "__main__":
         # 根据配置填写地址和核酸检测信息
         if location_info_from == 'CONFIG':
             curr_location = os.getenv('CURR_LOCATION')
-        else:
+        elif location_info_from == 'LAST':
             curr_location = dk_info[1]["CURR_LOCATION"]
+        else:
+            log.error('核酸检测日期方式方式不准确，请检查是否正确地设置了 SECRET 项（GitHub Action）。')
+            notify('核酸检测日期方式方式不准确，请检查是否正确地设置了 SECRET 项（GitHub Action）。')
+            os._exit(1)
         zjhs_time = get_zjhs_time(method, username, dk_info[1]['ZJHSJCSJ'])
 
         if dk_info[0]['TBZT'] == "0":
