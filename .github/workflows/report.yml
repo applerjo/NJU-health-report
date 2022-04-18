@@ -1,13 +1,9 @@
 name: Health Report Action
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - master
-  
+  workflow_dispatch:  
   schedule:
-    - cron: '0 13 * * *'
+    - cron: '0 11 * * *'
 
 jobs:
   build:
@@ -27,6 +23,19 @@ jobs:
         env:
           NJU_USERNAME: ${{ secrets.username }}
           NJU_PASSWORD: ${{ secrets.password }}
+          LOCATION_INFO_FROM: ${{ secrets.location_info_from }}
           CURR_LOCATION: ${{ secrets.location }}
+          COVID_TEST_METHOD: ${{ secrets.covid_test_method }}
         run: |
           python run.py
+      - name: Send mail
+        uses: dawidd6/action-send-mail@master
+        with:
+          server_address: smtp.qq.com
+          server_port: 465
+          username: ${{ secrets.mail_username }}
+          password: ${{ secrets.mail_password }}
+          subject: 每日打卡信息
+          body:  file://email.txt
+          to: ${{ secrets.receive_email }}
+          from: GitHub Actions
