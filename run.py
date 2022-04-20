@@ -50,10 +50,18 @@ def get_zjhs_time(method='YESTERDAY', username=None, last_time=None):
             date = get_normalization_date(username).strftime("%Y-%m-%d %-H")
         return date
     else:
-        log.error('核酸检测日期方式方式不准确，请检查是否正确地设置了 SECRET 项（GitHub Action）。')
-        notify('核酸检测日期方式方式不准确，请检查是否正确地设置了 SECRET 项（GitHub Action）。')
-        os._exit(1)
+        log.info('核酸检测日期方式方式不正确，使用默认设置: LAST')
+        return last_time
 
+
+def get_location(location_info_from, last_location):
+    if location_info_from == 'CONFIG':
+        return os.getenv('CURR_LOCATION')
+    elif location_info_from == 'LAST':
+        return last_location
+    else:
+        log.info('地址信息配置不正确，使用默认设置: LAST')
+        return last_location
 
 
 if __name__ == "__main__":
@@ -62,15 +70,11 @@ if __name__ == "__main__":
         level=logging.INFO, format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
     log = logging.getLogger()
 
-    # 随机等待0-16.6667min
-    sleep_time = random.random()*1000
-    log.info('正在等待...(等待时间：%ds)' % sleep_time)
-    time.sleep(sleep_time)
-
     username = os.getenv('NJU_USERNAME')
     password = os.getenv('NJU_PASSWORD')
     location_info_from = os.getenv('LOCATION_INFO_FROM')
     method = os.getenv('COVID_TEST_METHOD')
+    random_sleep = os.getenv('SLEEP') == 'true'
     curr_location = ''
     zjhs_time = ''
 
@@ -85,36 +89,50 @@ if __name__ == "__main__":
         os._exit(1)
 
     log.info('尝试登录...')
+    for count in range(10):
+        try:
+            if auth.needCaptcha(username):
+                log.info("统一认证平台需要输入验证码才能继续，尝试识别验证码...")
 
-    if auth.needCaptcha(username):
-        log.info("统一认证平台需要输入验证码才能继续，尝试识别验证码...")
+            ok = auth.tryLogin(username, password)
+            if not ok:
+                log.error("登录失败。可能是用户名或密码错误，或是验证码无法识别。")
+                notify("登录失败。可能是用户名或密码错误，或是验证码无法识别。")
+                os._exit(1)
 
-    ok = auth.tryLogin(username, password)
-    if not ok:
-        log.error("登录失败。可能是用户名或密码错误，或是验证码无法识别。")
-        notify("登录失败。可能是用户名或密码错误，或是验证码无法识别。")
-        os._exit(1)
+            log.info('登录成功！')
+            break
+        except ConnectionError as ce:
+            if count == 9:
+                log.error('多次登陆连接失败，脚本暂不可用')
+                notify('多次登陆连接失败，脚本暂不可用')
+                os._exit(1)
+            else:
+                log.error('登陆连接失败，1min后重试...')
+                time.sleep(60)  # 等1min
 
-    log.info('登录成功！')
+    # 随机等待0-16.6667min
+    if random_sleep:
+        sleep_time = random.random()*1000
+        log.info('随机等待，正在等待...(等待时间：%ds)' % sleep_time)
+        time.sleep(sleep_time)
 
     for count in range(10):
         log.info('尝试获取打卡列表信息...')
-        r = auth.session.get(URL_JKDK_LIST)
-        if r.status_code != 200:
+        try:
+            r = auth.session.get(URL_JKDK_LIST)
+            if r.status_code != 200:
+                log.error('获取失败，一分钟后再次尝试...')
+                time.sleep(60)
+                continue
+        except ConnectionError as ce:
             log.error('获取失败，一分钟后再次尝试...')
             time.sleep(60)
             continue
         dk_info = json.loads(r.text)['data']
 
         # 根据配置填写地址和核酸检测信息
-        if location_info_from == 'CONFIG':
-            curr_location = os.getenv('CURR_LOCATION')
-        elif location_info_from == 'LAST':
-            curr_location = dk_info[1]["CURR_LOCATION"]
-        else:
-            log.error('核酸检测日期方式方式不准确，请检查是否正确地设置了 SECRET 项（GitHub Action）。')
-            notify('核酸检测日期方式方式不准确，请检查是否正确地设置了 SECRET 项（GitHub Action）。')
-            os._exit(1)
+        curr_location = get_location(location_info_from, dk_info[1]["CURR_LOCATION"])
         zjhs_time = get_zjhs_time(method, username, dk_info[1]['ZJHSJCSJ'])
 
         if dk_info[0]['TBZT'] == "0":
@@ -122,9 +140,14 @@ if __name__ == "__main__":
             data = "?WID={}&IS_TWZC=1&CURR_LOCATION={}&ZJHSJCSJ={}&JRSKMYS=1&IS_HAS_JKQK=1&JZRJRSKMYS=1&SFZJLN=0".format(
                 wid, curr_location, zjhs_time)
             url = URL_JKDK_APPLY + data
-            log.info('正在打卡')
-            auth.session.get(url)
-            time.sleep(1)
+            log.info('正在打卡...')
+            try:
+                auth.session.get(url)
+                time.sleep(5)
+            except ConnectionError as ce:
+                log.error('打卡失败，一分钟后再次尝试...')
+                time.sleep(60)
+                continue
         else:
             log.info("打卡成功！")
             notify("打卡成功！")

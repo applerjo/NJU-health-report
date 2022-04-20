@@ -1,7 +1,13 @@
 name: Health Report Action
 
 on:
-  workflow_dispatch:  
+  workflow_dispatch:
+    inputs:
+      sleep:
+        description: 'Whether to wait for a random time'
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: '0 11 * * *'
 
@@ -26,6 +32,7 @@ jobs:
           LOCATION_INFO_FROM: ${{ secrets.location_info_from }}
           CURR_LOCATION: ${{ secrets.location }}
           COVID_TEST_METHOD: ${{ secrets.covid_test_method }}
+          SLEEP: ${{ github.event.inputs.sleep }}
         run: |
           python run.py
       - name: Send mail
