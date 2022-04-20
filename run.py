@@ -9,9 +9,6 @@ import logging
 import datetime
 from pytz import timezone
 
-URL_JKDK_LIST = 'http://ehallapp.nju.edu.cn/xgfw/sys/yqfxmrjkdkappnju/apply/getApplyInfoList.do'
-URL_JKDK_APPLY = 'http://ehallapp.nju.edu.cn/xgfw/sys/yqfxmrjkdkappnju/apply/saveApplyInfos.do'
-
 auth = NjuUiaAuth()
 
 
@@ -75,6 +72,7 @@ if __name__ == "__main__":
     location_info_from = os.getenv('LOCATION_INFO_FROM')
     method = os.getenv('COVID_TEST_METHOD')
     random_sleep = os.getenv('SLEEP') == 'true'
+
     curr_location = ''
     zjhs_time = ''
 
@@ -122,7 +120,7 @@ if __name__ == "__main__":
     for count in range(10):
         log.info('尝试获取打卡列表信息...')
         try:
-            r = auth.session.get(URL_JKDK_LIST)
+            r = auth.getHistory()
             if r.status_code != 200:
                 log.error('获取失败，一分钟后再次尝试...')
                 time.sleep(60)
@@ -139,13 +137,9 @@ if __name__ == "__main__":
         zjhs_time = get_zjhs_time(method, username, dk_info[1]['ZJHSJCSJ'])
 
         if dk_info[0]['TBZT'] == "0":
-            wid = dk_info[0]['WID']
-            data = "?WID={}&IS_TWZC=1&CURR_LOCATION={}&ZJHSJCSJ={}&JRSKMYS=1&IS_HAS_JKQK=1&JZRJRSKMYS=1&SFZJLN=0".format(
-                wid, curr_location, zjhs_time)
-            url = URL_JKDK_APPLY + data
             log.info('正在打卡...')
             try:
-                auth.session.get(url)
+                auth.checkin(dk_info[0]['WID'], curr_location, zjhs_time)
                 time.sleep(5)
             except Exception as e:
                 log.error(e)

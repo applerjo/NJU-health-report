@@ -15,6 +15,10 @@ import time
 
 URL_NJU_UIA_AUTH = 'https://authserver.nju.edu.cn/authserver/login'
 URL_NJU_ELITE_LOGIN = 'http://elite.nju.edu.cn/jiaowu/login.do'
+URL_JKDK_LIST = 'http://ehallapp.nju.edu.cn/xgfw/sys/yqfxmrjkdkappnju/apply/getApplyInfoList.do'
+URL_JKDK_APPLY = 'http://ehallapp.nju.edu.cn/xgfw/sys/yqfxmrjkdkappnju/apply/saveApplyInfos.do'
+
+MY_UA = "Mozilla/5.0 (Linux; Android 10; MAR-AL00 Build/HUAWEIMAR-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36  cpdaily/8.2.7 wisedu/8.2.7"
 
 
 class NjuUiaAuth:
@@ -26,7 +30,7 @@ class NjuUiaAuth:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': "Mozilla/5.0 (Linux; Android 11; M2006J10C Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/87.0.4280.141 Mobile Safari/537.36  cpdaily/8.2.7 wisedu/8.2.7})"
+            'User-Agent': MY_UA,
         })
 
         r = self.session.get(URL_NJU_UIA_AUTH)
@@ -113,6 +117,25 @@ class NjuUiaAuth:
         r = self.session.post(URL_NJU_UIA_AUTH, data=data,
                               allow_redirects=False)
         return r.status_code == 302
+
+    def getHistory(self):
+        return self.session.get(URL_JKDK_LIST)
+
+    def checkin(self, wid, curr_location, zjhs_time):
+        data = "?WID={}&IS_TWZC=1&CURR_LOCATION={}&ZJHSJCSJ={}&JRSKMYS=1&IS_HAS_JKQK=1&JZRJRSKMYS=1&SFZJLN=0".format(
+            wid, curr_location, zjhs_time)
+        url = URL_JKDK_APPLY + data
+        self.session.headers.update({
+            'Host': 'ehallapp.nju.edu.cn',
+            'Connection': 'keep-alive',
+            'Accept': 'application/json, text/plain, */*',
+            'User-Agent': MY_UA,
+            'X-Requested-With': 'com.wisedu.cpdaily.nju',
+            'Referer': 'http://ehallapp.nju.edu.cn/xgfw/sys/mrjkdkappnju/index.html',
+            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7'
+        })
+        self.session.get(url)
 
 
 class NjuEliteAuth:
