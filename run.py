@@ -102,12 +102,14 @@ if __name__ == "__main__":
 
             log.info('登录成功！')
             break
-        except ConnectionError as ce:
+        except  Exception as e:
             if count == 9:
+                log.error(e)
                 log.error('多次登陆连接失败，脚本暂不可用')
                 notify('多次登陆连接失败，脚本暂不可用')
                 os._exit(1)
             else:
+                log.error(e)
                 log.error('登陆连接失败，1min后重试...')
                 time.sleep(60)  # 等1min
 
@@ -125,7 +127,8 @@ if __name__ == "__main__":
                 log.error('获取失败，一分钟后再次尝试...')
                 time.sleep(60)
                 continue
-        except ConnectionError as ce:
+        except Exception as e:
+            log.error(e)
             log.error('获取失败，一分钟后再次尝试...')
             time.sleep(60)
             continue
@@ -144,7 +147,8 @@ if __name__ == "__main__":
             try:
                 auth.session.get(url)
                 time.sleep(5)
-            except ConnectionError as ce:
+            except Exception as e:
+                log.error(e)
                 log.error('打卡失败，一分钟后再次尝试...')
                 time.sleep(60)
                 continue
