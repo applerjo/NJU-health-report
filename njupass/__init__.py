@@ -15,6 +15,7 @@ import time
 
 URL_NJU_UIA_AUTH = 'https://authserver.nju.edu.cn/authserver/login'
 URL_NJU_ELITE_LOGIN = 'http://elite.nju.edu.cn/jiaowu/login.do'
+URL_JKDK_INDEX = 'http://ehallapp.nju.edu.cn/xgfw/sys/mrjkdkappnju/index.do'
 URL_JKDK_LIST = 'http://ehallapp.nju.edu.cn/xgfw/sys/yqfxmrjkdkappnju/apply/getApplyInfoList.do'
 URL_JKDK_APPLY = 'http://ehallapp.nju.edu.cn/xgfw/sys/yqfxmrjkdkappnju/apply/saveApplyInfos.do'
 
@@ -119,12 +120,18 @@ class NjuUiaAuth:
         return r.status_code == 302
 
     def getHistory(self):
+        self.session.get(URL_JKDK_INDEX)
+        self.updateHeaders()
         return self.session.get(URL_JKDK_LIST)
 
     def checkin(self, wid, curr_location, zjhs_time):
         data = "?WID={}&IS_TWZC=1&CURR_LOCATION={}&ZJHSJCSJ={}&JRSKMYS=1&IS_HAS_JKQK=1&JZRJRSKMYS=1&SFZJLN=0".format(
             wid, curr_location, zjhs_time)
         url = URL_JKDK_APPLY + data
+        self.updateHeaders()
+        self.session.get(url)
+
+    def updateHeaders(self):
         self.session.headers.update({
             'Host': 'ehallapp.nju.edu.cn',
             'Connection': 'keep-alive',
@@ -134,41 +141,4 @@ class NjuUiaAuth:
             'Referer': 'http://ehallapp.nju.edu.cn/xgfw/sys/mrjkdkappnju/index.html',
             'Accept-Encoding': 'gzip, deflate',
             'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7'
-        })
-        self.session.get(url)
-
-
-class NjuEliteAuth:
-    """
-    DESCRIPTION:
-        Designed for passing Unified Identity Authentication(UIA) of Nanjing University.
-    """
-
-    def __init__(self):
-        self.session = requests.session()
-
-    def getValidateCode(self):
-        """
-        DESCRIPTION:
-            Getting validate code binded with IP
-        RETURN_VALUE:
-            validate code image(ByteIO). Recommended using Image.show() in PIL.
-        """
-        url = 'http://elite.nju.edu.cn/jiaowu/ValidateCode.jsp'
-        res = self.session.get(url, stream=True)
-        return BytesIO(res.content)
-
-    def login(self, userName, password, validateCode):
-        """
-        DESCRIPTION:
-            Post a request for logging in.
-        ATTRIBUTES:
-            username(str)
-            password(str)
-            validateCode(str)
-        """
-        self.session.post(URL_NJU_ELITE_LOGIN, data={
-            'userName': userName,
-            'password': password,
-            'ValidateCode': validateCode
         })

@@ -20,7 +20,7 @@ def notify(msg):
 
 def get_normalization_date(username):
     today = datetime.datetime.now(timezone('Asia/Shanghai'))
-    date = datetime.datetime(2022, 4, 4 + (int(username[-1]) + 4) % 5, 8, 30)
+    date = datetime.datetime(2022, 4, (4 + 1) + (int(username[-1]) + 4) % 5, 8, 30)
     while (today.replace(tzinfo=None) - date).days >= 5:
         date += datetime.timedelta(days=5)
     return date
